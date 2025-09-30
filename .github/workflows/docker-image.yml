@@ -1,0 +1,43 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "scarthgap" ]
+  pull_request:
+    branches: [ "scarthgap" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKER_REGISTRY: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKER_IMAGE_NAME: yocto
+      DOCKER_IMAGE_TAG: scarthgap
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            -f Dockerfile \
+            --no-cache \
+            --network host \
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
+            .
+
+      - name: Tag image
+        run: |
+          docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
+            $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+
+      - name: Push image
+        run: |
+          docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
