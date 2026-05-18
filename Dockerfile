@@ -37,6 +37,9 @@ RUN apt-get install -y \
     util-linux \
     vim
 
+RUN git clone --depth 1 -b master https://git.openembedded.org/bitbake /opt/bitbake \
+    && ln -s /opt/bitbake/bin/bitbake-setup /usr/local/bin/bitbake-setup
+
 ARG USER
 ARG UID
 ARG GID
