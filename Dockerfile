@@ -40,6 +40,12 @@ RUN apt-get install -y \
 RUN git clone --depth 1 -b master https://git.openembedded.org/bitbake /opt/bitbake \
     && ln -s /opt/bitbake/bin/bitbake-setup /usr/bin/bitbake-setup
 
+COPY patches/ /tmp/patches/
+RUN for p in /tmp/patches/*.patch; do \
+        git -C /opt/bitbake apply "$p"; \
+    done \
+    && rm -rf /tmp/patches
+
 ENV PYTHONPATH="/opt/bitbake/lib:${PYTHONPATH}"
 
 ARG USER

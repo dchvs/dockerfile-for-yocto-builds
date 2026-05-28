@@ -1,0 +1,40 @@
+From: builder_client maintainers
+Subject: [PATCH] bitbake-setup: support --update-bb-conf on init
+
+Allow `bitbake-setup init` to preserve existing bitbake build
+configuration files (local.conf, bblayers.conf) by exposing the
+existing `update_bb_conf` parameter through a new `--update-bb-conf`
+CLI flag, matching the semantics of `bitbake-setup update`.
+
+This makes `init` behave like Yocto's `oe-init-build-env`, which
+respects an existing build/conf/ directory instead of overwriting
+it. Useful for projects that track their own local.conf in the
+repository and want `init` to fetch layers without clobbering it.
+
+Default remains "yes" for backward compatibility.
+
+---
+ bin/bitbake-setup | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/bin/bitbake-setup b/bin/bitbake-setup
+--- a/bin/bitbake-setup
++++ b/bin/bitbake-setup
+@@ -866,7 +866,7 @@ def init_config(top_dir, settings, args):
+     bb.event.register("bb.build.TaskProgress", handle_task_progress, data=d)
+ 
+     write_upstream_config(confdir, upstream_config)
+-    update_build(upstream_config, confdir, setupdir, layerdir, d, update_bb_conf="yes", init_vscode=args.init_vscode)
++    update_build(upstream_config, confdir, setupdir, layerdir, d, update_bb_conf=args.update_bb_conf, init_vscode=args.init_vscode)
+ 
+     bb.event.remove("bb.build.TaskProgress", None)
+ 
+@@ -1264,6 +1264,8 @@ def main():
+                         help='Symlink local source into a build, instead of getting it as prescribed by a configuration (useful for local development).')
+     parser_init.add_argument('--init-vscode', action=argparse.BooleanOptionalAction, default=bool(shutil.which('code')),
+                         help='Generate VSCode workspace configuration (default: %(default)s)')
++    parser_init.add_argument('--update-bb-conf', choices=['prompt', 'yes', 'no'], default='yes',
++                        help='Update bitbake configuration files (bblayers.conf, local.conf) when re-initializing an existing setup (default: %(default)s)')
+     parser_init.set_defaults(func=init_config)
+ 
+     parser_status = subparsers.add_parser('status', help='Check if the setup needs to be synchronized with configuration')
